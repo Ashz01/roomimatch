@@ -184,27 +184,34 @@ export default function RoomiMatch() {
   const [activeFilter, setActiveFilter] = useState("All");
   const [savingProfile, setSavingProfile] = useState(false);
 
-  const setupRecaptcha = () => {
-    if (!window.recaptchaVerifier) {
-      window.recaptchaVerifier = new RecaptchaVerifier(auth, "recaptcha-container", { size: "invisible" });
-    }
-  };
-
   const sendOTP = async () => {
-    if (phone.length !== 10) { setError("Enter a valid 10-digit number"); return; }
-    setLoading(true); setError(""); setSuccess("");
-    try {
-      setupRecaptcha();
-      const result = await signInWithPhoneNumber(auth, `+91${phone}`, window.recaptchaVerifier);
-      setConfirmResult(result);
-      setSuccess("OTP sent successfully!");
-      setScreen("otp");
-    } catch (e) {
-      setError("Failed to send OTP. Try again.");
-      if (window.recaptchaVerifier) { window.recaptchaVerifier.clear(); window.recaptchaVerifier = null; }
-    }
-    setLoading(false);
-  };
+  if (phone.length !== 10) {
+    setError("Enter a valid 10-digit number");
+    return;
+  }
+  setLoading(true);
+  setError("");
+  setSuccess("");
+  try {
+    const appVerifier = new RecaptchaVerifier(
+      auth,
+      "recaptcha-container",
+      { size: "invisible" }
+    );
+    const result = await signInWithPhoneNumber(
+      auth,
+      `+91${phone}`,
+      appVerifier
+    );
+    setConfirmResult(result);
+    setSuccess("OTP sent! Check your messages.");
+    setScreen("otp");
+    appVerifier.clear();
+  } catch (e) {
+    setError("Failed to send OTP. Try again.");
+  }
+  setLoading(false);
+};
 
   const verifyOTP = async () => {
     const code = otp.join("");
